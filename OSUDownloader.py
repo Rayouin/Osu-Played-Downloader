@@ -50,5 +50,6 @@ while True:
 
     # next run
     offset += limit
-    print("\nWaiting 60 seconds before the next batch is downloaded ...")
-    time.sleep(60)
+    print("\nWaiting 20 seconds before the next batch is downloaded ...")
+    # waiting is probably unnecessary but I want to somewhat limit the number of calls
+    time.sleep(20)

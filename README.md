@@ -17,6 +17,7 @@
 * https://www.python.org/downloads/
 ### requests library
 * Once python is installed, open powershell and type: `pip install requests`
+* Probably also the csv library (added to tomhepz code for skipping already downloaded entries)
 
 ## I'm ready
 * Run python script in powershell/cmd by changing to that directory and typing `python .\OsuDownloader.py`

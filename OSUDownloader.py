@@ -3,6 +3,7 @@ import requests
 import os
 import string
 import unicodedata
+import time
 
 validFilenameChars = "-_.() %s%s" % (string.ascii_letters, string.digits)
 def removeDisallowedFilenameChars(filename):
@@ -10,30 +11,44 @@ def removeDisallowedFilenameChars(filename):
     return ''.join(chr(c) for c in cleanedFilename if chr(c) in validFilenameChars)
 
 user_id = int(input('Enter User ID from profile URL: '))
-number_of_maps = int(input('Enter top number of maps to download: '))
 osu_session_cookie = str(input('Enter osu session token, instructions in github readme: '))
 
-r = requests.get(f'https://osu.ppy.sh/users/{user_id}/beatmapsets/most_played?offset=0&limit={number_of_maps}')
-data = r.json()
+# Limit ist fest auf 20
+limit = 20
+offset = 0
 
 try:
     os.makedirs("./songs")
 except FileExistsError:
     pass
 
-for beatmap in data:
-    beatmap_id = beatmap['beatmapset']['id']
-    beatmap_title = removeDisallowedFilenameChars(str(beatmap['beatmapset']['title']))
-    download_url = f"https://osu.ppy.sh/beatmapsets/{beatmap_id}/download?noVideo=1"
-    
-    print(f'\n-------{beatmap_id}-------')
-    print(download_url)
-    print('Downloading beatmap: ' + str(beatmap_title))
-    
-    cookies = {'osu_session': osu_session_cookie}
-    r = requests.get(download_url, cookies=cookies)
+while True:
+    print(f"\nFetching maps with offset={offset}, limit={limit} ...")
+    r = requests.get(
+        f'https://osu.ppy.sh/users/{user_id}/beatmapsets/most_played?offset={offset}&limit={limit}'
+    )
+    data = r.json()
 
-    with open(f'./songs/{beatmap_title}.osz', 'wb') as f:  
-        f.write(r.content)
+    if not data:  # No new data
+        print("\nNo more beatmaps found. Done!")
+        break
 
-        
+    for beatmap in data:
+        beatmap_id = beatmap['beatmapset']['id']
+        beatmap_title = removeDisallowedFilenameChars(str(beatmap['beatmapset']['title']))
+        download_url = f"https://osu.ppy.sh/beatmapsets/{beatmap_id}/download?noVideo=1"
+
+        print(f'\n-------{beatmap_id}-------')
+        print(download_url)
+        print('Downloading beatmap: ' + str(beatmap_title))
+
+        cookies = {'osu_session': osu_session_cookie}
+        r = requests.get(download_url, cookies=cookies)
+
+        with open(f'./songs/{beatmap_title}.osz', 'wb') as f:  
+            f.write(r.content)
+
+    # next run
+    offset += limit
+    print("\nWaiting 60 seconds before the next batch is downloaded ...")
+    time.sleep(60)
